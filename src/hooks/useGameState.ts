@@ -391,16 +391,85 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       
       if (offlineSeconds < 1) return state;
       
-      // 冒険中の冒険者を処理
+      // 冒険中の冒険者を処理（オフライン周回対応）
       let newState = { ...state };
-      for (const adventurer of newState.adventurers) {
+      
+      for (const adventurer of state.adventurers) {
         if (adventurer.status === 'adventuring' && adventurer.dungeon && adventurer.departedAt) {
           const dungeon = DUNGEONS[adventurer.dungeon];
-          const totalElapsed = (now - adventurer.departedAt) / 1000;
+          let remainingTime = offlineSeconds + ((now - adventurer.departedAt) / 1000) - dungeon.durationSeconds;
+          let currentAdventurer = newState.adventurers.find(a => a.id === adventurer.id)!;
           
-          if (totalElapsed >= dungeon.durationSeconds) {
-            // 帰還処理を適用
-            newState = gameReducer(newState, { type: 'RETURN_FROM_DUNGEON', adventurerId: adventurer.id });
+          // 最初の1周が完了しているか
+          const firstRunElapsed = (now - adventurer.departedAt) / 1000;
+          if (firstRunElapsed < dungeon.durationSeconds) {
+            continue; // まだ1周目が終わってない
+          }
+          
+          // 1周目を処理
+          newState = gameReducer(newState, { type: 'RETURN_FROM_DUNGEON', adventurerId: adventurer.id });
+          currentAdventurer = newState.adventurers.find(a => a.id === adventurer.id)!;
+          
+          // 残りの周回をオフラインで処理
+          while (
+            remainingTime >= dungeon.durationSeconds &&
+            currentAdventurer.status === 'adventuring' &&
+            currentAdventurer.hp > 0 &&
+            currentAdventurer.completedRuns < currentAdventurer.targetRuns
+          ) {
+            // この周の結果を計算
+            const { success, damage } = isDungeonSuccess(currentAdventurer, adventurer.dungeon);
+            const newLoot = success ? calculateLoot(adventurer.dungeon, currentAdventurer.level) : {};
+            const newHp = Math.max(0, currentAdventurer.hp - damage);
+            
+            // 戦利品を累積
+            const accumulatedLoot = { ...currentAdventurer.loot };
+            for (const [material, amount] of Object.entries(newLoot)) {
+              accumulatedLoot[material as MaterialType] = (accumulatedLoot[material as MaterialType] || 0) + (amount || 0);
+            }
+            
+            // 経験値
+            const expGain = success ? Math.floor(dungeon.difficulty * 2) : Math.floor(dungeon.difficulty * 0.5);
+            let newAdvExp = currentAdventurer.exp + expGain;
+            let newAdvLevel = currentAdventurer.level;
+            let newMaxHp = currentAdventurer.maxHp;
+            let newBaseAttack = currentAdventurer.baseAttack;
+            
+            while (newAdvExp >= getAdventurerExpForLevel(newAdvLevel)) {
+              newAdvExp -= getAdventurerExpForLevel(newAdvLevel);
+              newAdvLevel++;
+              newMaxHp = calculateMaxHp(newAdvLevel);
+              newBaseAttack = calculateBaseAttack(newAdvLevel);
+            }
+            
+            const newCompletedRuns = currentAdventurer.completedRuns + 1;
+            const hasMoreRuns = newCompletedRuns < currentAdventurer.targetRuns && newHp > 0;
+            
+            // 状態を更新
+            newState = {
+              ...newState,
+              adventurers: newState.adventurers.map(a =>
+                a.id === adventurer.id
+                  ? {
+                      ...a,
+                      status: hasMoreRuns ? 'adventuring' as const : 'returned' as const,
+                      departedAt: hasMoreRuns ? now : null,
+                      hp: newHp,
+                      exp: newAdvExp,
+                      level: newAdvLevel,
+                      maxHp: newMaxHp,
+                      baseAttack: newBaseAttack,
+                      loot: accumulatedLoot,
+                      gold: a.gold + (success ? Math.floor(dungeon.difficulty * 0.5) : 0),
+                      completedRuns: newCompletedRuns,
+                      targetRuns: hasMoreRuns ? a.targetRuns : 0,
+                    }
+                  : a
+              ),
+            };
+            
+            currentAdventurer = newState.adventurers.find(a => a.id === adventurer.id)!;
+            remainingTime -= dungeon.durationSeconds;
           }
         }
       }
