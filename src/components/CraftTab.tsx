@@ -4,9 +4,10 @@ import { WEAPONS, MATERIALS, RANK_COLORS } from '../data/gameData';
 interface CraftTabProps {
   state: GameState;
   onCraft: (weapon: WeaponType) => void;
+  onSellDirect?: (weapon: WeaponType) => void;
 }
 
-export function CraftTab({ state, onCraft }: CraftTabProps) {
+export function CraftTab({ state, onCraft, onSellDirect }: CraftTabProps) {
   const weapons = Object.values(WEAPONS).sort((a, b) => a.requiredLevel - b.requiredLevel);
 
   const canCraft = (weapon: typeof WEAPONS[WeaponType]) => {
@@ -81,13 +82,24 @@ export function CraftTab({ state, onCraft }: CraftTabProps) {
                     {stockCount > 0 && <span className="stock">在庫: {stockCount}</span>}
                   </div>
 
-                  <button
-                    className="craft-button"
-                    onClick={() => onCraft(weapon.id)}
-                    disabled={!hasResources}
-                  >
-                    {hasResources ? '製作する' : '素材不足'}
-                  </button>
+                  <div className="weapon-actions">
+                    <button
+                      className="craft-button"
+                      onClick={() => onCraft(weapon.id)}
+                      disabled={!hasResources}
+                    >
+                      {hasResources ? '製作する' : '素材不足'}
+                    </button>
+                    {stockCount > 0 && onSellDirect && (
+                      <button
+                        className="sell-direct-button"
+                        onClick={() => onSellDirect(weapon.id)}
+                        title="行商人に半額で売却"
+                      >
+                        💸 {Math.floor(weapon.sellPrice * 0.5)}Gで売却
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
             </div>

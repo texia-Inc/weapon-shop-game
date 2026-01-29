@@ -17,8 +17,10 @@ function App() {
     state,
     craftWeapon,
     sellWeapon,
+    sellWeaponDirect,
     sendToDungeon,
     buyMaterials,
+    skipMaterials,
     hireAdventurer,
     healAdventurer,
     resetGame,
@@ -66,7 +68,7 @@ function App() {
 
       <main className="main-content">
         {activeTab === 'craft' && (
-          <CraftTab state={state} onCraft={craftWeapon} />
+          <CraftTab state={state} onCraft={craftWeapon} onSellDirect={sellWeaponDirect} />
         )}
         {activeTab === 'shop' && (
           <ShopTab state={state} onSell={sellWeapon} />
@@ -75,6 +77,7 @@ function App() {
           <AdventurersTab
             state={state}
             onBuyMaterials={buyMaterials}
+            onSkipMaterials={skipMaterials}
             onHireAdventurer={hireAdventurer}
             onHealAdventurer={healAdventurer}
           />

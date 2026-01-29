@@ -91,9 +91,11 @@ export interface GameState {
 export type GameAction =
   | { type: 'CRAFT_WEAPON'; weapon: WeaponType }
   | { type: 'SELL_WEAPON'; weapon: WeaponType; adventurerId: string }
+  | { type: 'SELL_WEAPON_DIRECT'; weapon: WeaponType }
   | { type: 'SEND_TO_DUNGEON'; adventurerId: string; dungeon: DungeonType; runs?: number }
   | { type: 'RETURN_FROM_DUNGEON'; adventurerId: string }
   | { type: 'BUY_MATERIALS'; adventurerId: string }
+  | { type: 'SKIP_MATERIALS'; adventurerId: string }
   | { type: 'PROCESS_OFFLINE_TIME' }
   | { type: 'TICK' }
   | { type: 'HIRE_ADVENTURER' }

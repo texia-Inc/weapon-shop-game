@@ -340,6 +340,47 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
+    case 'SKIP_MATERIALS': {
+      const adventurer = state.adventurers.find(a => a.id === action.adventurerId);
+      if (!adventurer || adventurer.status !== 'returned') return state;
+      
+      // 素材を買い取らずに冒険者をidleに戻す（素材は消失）
+      return {
+        ...state,
+        adventurers: state.adventurers.map(a =>
+          a.id === action.adventurerId
+            ? { ...a, status: 'idle' as const, dungeon: null, departedAt: null, loot: {} }
+            : a
+        ),
+        lastUpdated: Date.now(),
+      };
+    }
+
+    case 'SELL_WEAPON_DIRECT': {
+      const weapon = WEAPONS[action.weapon];
+      if (!weapon) return state;
+      if ((state.inventory.weapons[action.weapon] || 0) < 1) return state;
+      
+      // 在庫から武器を直接売却（半額）
+      const sellPrice = Math.floor(weapon.sellPrice * 0.5);
+      
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          gold: state.player.gold + sellPrice,
+        },
+        inventory: {
+          ...state.inventory,
+          weapons: {
+            ...state.inventory.weapons,
+            [action.weapon]: (state.inventory.weapons[action.weapon] || 0) - 1,
+          },
+        },
+        lastUpdated: Date.now(),
+      };
+    }
+
     case 'HIRE_ADVENTURER': {
       const cost = getHireCost(state.adventurers.length);
       if (state.player.gold < cost) return state;
@@ -566,6 +607,14 @@ export function useGameState() {
     dispatch({ type: 'BUY_MATERIALS', adventurerId });
   }, []);
 
+  const skipMaterials = useCallback((adventurerId: string) => {
+    dispatch({ type: 'SKIP_MATERIALS', adventurerId });
+  }, []);
+
+  const sellWeaponDirect = useCallback((weapon: WeaponType) => {
+    dispatch({ type: 'SELL_WEAPON_DIRECT', weapon });
+  }, []);
+
   const hireAdventurer = useCallback(() => {
     dispatch({ type: 'HIRE_ADVENTURER' });
   }, []);
@@ -582,8 +631,10 @@ export function useGameState() {
     state,
     craftWeapon,
     sellWeapon,
+    sellWeaponDirect,
     sendToDungeon,
     buyMaterials,
+    skipMaterials,
     hireAdventurer,
     healAdventurer,
     resetGame,

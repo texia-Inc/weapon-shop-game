@@ -332,6 +332,12 @@ body {
   font-weight: bold;
 }
 
+.weapon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .craft-button {
   width: 100%;
   padding: 0.75rem;
@@ -352,6 +358,23 @@ body {
   background: var(--bg-lighter);
   color: var(--text-secondary);
   cursor: not-allowed;
+}
+
+.sell-direct-button {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg-lighter);
+  border: none;
+  border-radius: 6px;
+  color: var(--gold);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sell-direct-button:hover {
+  background: var(--gold);
+  color: var(--bg-dark);
 }
 
 /* Shop Tab */
@@ -616,6 +639,12 @@ body {
   font-size: 0.9rem;
 }
 
+.loot-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .buy-loot-button,
 .dismiss-button {
   padding: 0.5rem 1rem;
@@ -631,6 +660,21 @@ body {
   background: var(--bg-lighter);
   color: var(--text-secondary);
   cursor: not-allowed;
+}
+
+.skip-loot-button {
+  padding: 0.5rem 1rem;
+  background: var(--bg-lighter);
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skip-loot-button:hover {
+  background: var(--red);
+  color: white;
 }
 
 .no-loot {

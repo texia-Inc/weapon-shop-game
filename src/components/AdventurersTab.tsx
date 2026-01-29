@@ -5,11 +5,12 @@ import { WEAPONS, DUNGEONS, MATERIALS, getHireCost, getHealCost, getAdventurerEx
 interface AdventurersTabProps {
   state: GameState;
   onBuyMaterials: (adventurerId: string) => void;
+  onSkipMaterials: (adventurerId: string) => void;
   onHireAdventurer: () => void;
   onHealAdventurer: (adventurerId: string) => void;
 }
 
-export function AdventurersTab({ state, onBuyMaterials, onHireAdventurer, onHealAdventurer }: AdventurersTabProps) {
+export function AdventurersTab({ state, onBuyMaterials, onSkipMaterials, onHireAdventurer, onHealAdventurer }: AdventurersTabProps) {
   const [, setTick] = useState(0);
   const hireCost = getHireCost(state.adventurers.length);
   const canHire = state.player.gold >= hireCost && state.adventurers.length < 10;
@@ -148,13 +149,22 @@ export function AdventurersTab({ state, onBuyMaterials, onHireAdventurer, onHeal
                             );
                           })}
                         </div>
-                        <button
-                          className="buy-loot-button"
-                          onClick={() => onBuyMaterials(adventurer.id)}
-                          disabled={!canAffordLoot}
-                        >
-                          💰 {lootValue}Gで買取
-                        </button>
+                        <div className="loot-actions">
+                          <button
+                            className="buy-loot-button"
+                            onClick={() => onBuyMaterials(adventurer.id)}
+                            disabled={!canAffordLoot}
+                          >
+                            💰 {lootValue}Gで買取
+                          </button>
+                          <button
+                            className="skip-loot-button"
+                            onClick={() => onSkipMaterials(adventurer.id)}
+                            title="素材を買い取らずに見送る"
+                          >
+                            🚫 見送る
+                          </button>
+                        </div>
                       </>
                     ) : (
                       <>
