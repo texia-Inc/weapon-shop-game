@@ -115,10 +115,21 @@ export function AdventurersTab({ state, onBuyMaterials, onHireAdventurer, onHeal
                   <div className="status-adventuring">
                     <span className="status-text">
                       🏃 {dungeon.emoji} {dungeon.name}で冒険中
+                      {adventurer.targetRuns > 1 && (
+                        <span className="run-progress"> ({adventurer.completedRuns + 1}/{adventurer.targetRuns}回目)</span>
+                      )}
                     </span>
                     <span className="time-remaining">
                       残り {formatTimeRemaining(adventurer.departedAt, dungeon.durationSeconds)}
                     </span>
+                    {Object.keys(adventurer.loot).length > 0 && (
+                      <div className="accumulated-loot">
+                        📦 累積: {Object.entries(adventurer.loot).map(([materialId, amount]) => {
+                          const material = MATERIALS[materialId as MaterialType];
+                          return <span key={materialId}>{material.emoji}{amount} </span>;
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 

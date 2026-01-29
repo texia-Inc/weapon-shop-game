@@ -65,6 +65,9 @@ export interface Adventurer {
   departedAt: number | null;
   loot: Partial<Record<MaterialType, number>>;
   gold: number;
+  // 周回機能
+  targetRuns: number;      // 目標周回数
+  completedRuns: number;   // 完了した周回数
 }
 
 // ゲーム状態
@@ -88,7 +91,7 @@ export interface GameState {
 export type GameAction =
   | { type: 'CRAFT_WEAPON'; weapon: WeaponType }
   | { type: 'SELL_WEAPON'; weapon: WeaponType; adventurerId: string }
-  | { type: 'SEND_TO_DUNGEON'; adventurerId: string; dungeon: DungeonType }
+  | { type: 'SEND_TO_DUNGEON'; adventurerId: string; dungeon: DungeonType; runs?: number }
   | { type: 'RETURN_FROM_DUNGEON'; adventurerId: string }
   | { type: 'BUY_MATERIALS'; adventurerId: string }
   | { type: 'PROCESS_OFFLINE_TIME' }

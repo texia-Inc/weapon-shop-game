@@ -35,6 +35,8 @@ const createAdventurer = (existingNames: string[]): Adventurer => {
     departedAt: null,
     loot: {},
     gold: 30,
+    targetRuns: 0,
+    completedRuns: 0,
   };
 };
 
@@ -190,9 +192,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const adventurer = state.adventurers.find(a => a.id === action.adventurerId);
       const dungeon = DUNGEONS[action.dungeon];
       if (!adventurer || !dungeon) return state;
-      if (adventurer.status !== 'idle') return state;
+      if (adventurer.status !== 'idle' && adventurer.status !== 'returned') return state;
       if (adventurer.level < dungeon.requiredLevel) return state;
       if (adventurer.hp <= 0) return state;
+      
+      const runs = action.runs || 1;
+      const isNewRun = adventurer.status === 'idle';
       
       return {
         ...state,
@@ -203,7 +208,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 status: 'adventuring' as const,
                 dungeon: action.dungeon,
                 departedAt: Date.now(),
-                loot: {},
+                // 新規開始時のみlootをリセット、周回継続時は維持
+                loot: isNewRun ? {} : a.loot,
+                targetRuns: isNewRun ? runs : a.targetRuns,
+                completedRuns: isNewRun ? 0 : a.completedRuns,
               }
             : a
         ),
@@ -220,8 +228,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (elapsedTime < dungeon.durationSeconds) return state;
       
       const { success, damage } = isDungeonSuccess(adventurer, adventurer.dungeon);
-      const loot = success ? calculateLoot(adventurer.dungeon, adventurer.level) : {};
+      const newLoot = success ? calculateLoot(adventurer.dungeon, adventurer.level) : {};
       const newHp = Math.max(0, adventurer.hp - damage);
+      
+      // 戦利品を累積
+      const accumulatedLoot = { ...adventurer.loot };
+      for (const [material, amount] of Object.entries(newLoot)) {
+        accumulatedLoot[material as MaterialType] = (accumulatedLoot[material as MaterialType] || 0) + (amount || 0);
+      }
       
       // 経験値
       const expGain = success ? Math.floor(dungeon.difficulty * 2) : Math.floor(dungeon.difficulty * 0.5);
@@ -237,20 +251,28 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         newBaseAttack = calculateBaseAttack(newAdvLevel);
       }
       
+      const newCompletedRuns = adventurer.completedRuns + 1;
+      const hasMoreRuns = newCompletedRuns < adventurer.targetRuns && newHp > 0;
+      
       return {
         ...state,
         adventurers: state.adventurers.map(a =>
           a.id === action.adventurerId
             ? {
                 ...a,
-                status: 'returned' as const,
+                // 周回が残っていてHPがあれば自動で次へ
+                status: hasMoreRuns ? 'adventuring' as const : 'returned' as const,
+                departedAt: hasMoreRuns ? Date.now() : null,
                 hp: newHp,
                 exp: newAdvExp,
                 level: newAdvLevel,
                 maxHp: newMaxHp,
                 baseAttack: newBaseAttack,
-                loot,
+                loot: accumulatedLoot,
                 gold: a.gold + (success ? Math.floor(dungeon.difficulty * 0.5) : 0),
+                completedRuns: newCompletedRuns,
+                // 周回完了またはHP切れで終了時はリセット
+                targetRuns: hasMoreRuns ? a.targetRuns : 0,
               }
             : a
         ),
@@ -467,8 +489,8 @@ export function useGameState() {
     dispatch({ type: 'SELL_WEAPON', weapon, adventurerId });
   }, []);
 
-  const sendToDungeon = useCallback((adventurerId: string, dungeon: DungeonType) => {
-    dispatch({ type: 'SEND_TO_DUNGEON', adventurerId, dungeon });
+  const sendToDungeon = useCallback((adventurerId: string, dungeon: DungeonType, runs?: number) => {
+    dispatch({ type: 'SEND_TO_DUNGEON', adventurerId, dungeon, runs });
   }, []);
 
   const buyMaterials = useCallback((adventurerId: string) => {

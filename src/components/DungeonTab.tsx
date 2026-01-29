@@ -4,11 +4,14 @@ import { DUNGEONS, MATERIALS, WEAPONS } from '../data/gameData';
 
 interface DungeonTabProps {
   state: GameState;
-  onSendToDungeon: (adventurerId: string, dungeon: DungeonType) => void;
+  onSendToDungeon: (adventurerId: string, dungeon: DungeonType, runs?: number) => void;
 }
+
+const RUN_OPTIONS = [1, 5, 10, 20, 50];
 
 export function DungeonTab({ state, onSendToDungeon }: DungeonTabProps) {
   const [selectedDungeon, setSelectedDungeon] = useState<DungeonType | null>(null);
+  const [selectedRuns, setSelectedRuns] = useState<number>(1);
   const dungeons = Object.values(DUNGEONS);
   const idleAdventurers = state.adventurers.filter(a => a.status === 'idle' && a.hp > 0);
 
@@ -64,6 +67,25 @@ export function DungeonTab({ state, onSendToDungeon }: DungeonTabProps) {
 
       {selectedDungeon && (
         <>
+          <div className="run-selector">
+            <h3>🔄 周回数</h3>
+            <div className="run-options">
+              {RUN_OPTIONS.map((runs) => (
+                <button
+                  key={runs}
+                  className={`run-option ${selectedRuns === runs ? 'selected' : ''}`}
+                  onClick={() => setSelectedRuns(runs)}
+                >
+                  {runs}回
+                </button>
+              ))}
+            </div>
+            <p className="run-info">
+              ⏱️ 予想時間: {formatDuration(DUNGEONS[selectedDungeon].durationSeconds * selectedRuns)}
+              　💡 HPが無くなると自動終了
+            </p>
+          </div>
+
           <h3>🏃 派遣可能な冒険者</h3>
           {idleAdventurers.length === 0 ? (
             <div className="empty-state">
@@ -95,10 +117,10 @@ export function DungeonTab({ state, onSendToDungeon }: DungeonTabProps) {
                     </div>
                     <button
                       className="dispatch-button"
-                      onClick={() => onSendToDungeon(adventurer.id, selectedDungeon)}
+                      onClick={() => onSendToDungeon(adventurer.id, selectedDungeon, selectedRuns)}
                       disabled={!canGo}
                     >
-                      {canGo ? '派遣する' : `Lv.${dungeon.requiredLevel}必要`}
+                      {canGo ? `${selectedRuns}回派遣` : `Lv.${dungeon.requiredLevel}必要`}
                     </button>
                   </div>
                 );
