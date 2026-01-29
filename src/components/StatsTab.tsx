@@ -4,9 +4,10 @@ import { MATERIALS, WEAPONS } from '../data/gameData';
 interface StatsTabProps {
   state: GameState;
   onReset: () => void;
+  onBailout: () => void;
 }
 
-export function StatsTab({ state, onReset }: StatsTabProps) {
+export function StatsTab({ state, onReset, onBailout }: StatsTabProps) {
   const totalMaterials = Object.values(state.inventory.materials).reduce((a, b) => a + (b || 0), 0);
   const totalWeapons = Object.values(state.inventory.weapons).reduce((a, b) => a + (b || 0), 0);
   const activeAdventurers = state.adventurers.filter(a => a.status === 'adventuring').length;
@@ -74,6 +75,29 @@ export function StatsTab({ state, onReset }: StatsTabProps) {
               );
             })}
         </div>
+      </div>
+
+      <div className="bailout-section">
+        <h3>🆘 緊急資金</h3>
+        <p className="bailout-description">詰んでしまった時の救済措置。50Gを受け取れます（24時間に1回）</p>
+        {(() => {
+          const BAILOUT_COOLDOWN = 24 * 60 * 60 * 1000;
+          const canBailout = !state.lastBailout || (Date.now() - state.lastBailout) >= BAILOUT_COOLDOWN;
+          const remainingTime = state.lastBailout 
+            ? Math.max(0, BAILOUT_COOLDOWN - (Date.now() - state.lastBailout))
+            : 0;
+          const remainingHours = Math.ceil(remainingTime / (60 * 60 * 1000));
+          
+          return (
+            <button 
+              className="bailout-button" 
+              onClick={onBailout}
+              disabled={!canBailout}
+            >
+              {canBailout ? '🆘 50G を受け取る' : `⏳ 残り約${remainingHours}時間`}
+            </button>
+          );
+        })()}
       </div>
 
       <div className="reset-section">

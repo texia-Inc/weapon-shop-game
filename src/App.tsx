@@ -23,6 +23,7 @@ function App() {
     skipMaterials,
     hireAdventurer,
     healAdventurer,
+    bailout,
     resetGame,
   } = useGameState();
 
@@ -86,7 +87,7 @@ function App() {
           <DungeonTab state={state} onSendToDungeon={sendToDungeon} />
         )}
         {activeTab === 'stats' && (
-          <StatsTab state={state} onReset={resetGame} />
+          <StatsTab state={state} onReset={resetGame} onBailout={bailout} />
         )}
       </main>
 

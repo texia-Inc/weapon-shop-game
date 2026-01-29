@@ -85,6 +85,7 @@ export interface GameState {
   lastUpdated: number;
   totalWeaponsSold: number;
   totalMaterialsBought: number;
+  lastBailout: number | null;  // 最後に緊急資金を使った時刻
 }
 
 // アクション
@@ -100,5 +101,6 @@ export type GameAction =
   | { type: 'TICK' }
   | { type: 'HIRE_ADVENTURER' }
   | { type: 'HEAL_ADVENTURER'; adventurerId: string }
+  | { type: 'BAILOUT' }
   | { type: 'LOAD_GAME'; state: GameState }
   | { type: 'RESET_GAME' };

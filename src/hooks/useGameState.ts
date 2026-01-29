@@ -58,6 +58,7 @@ const createInitialState = (): GameState => {
     lastUpdated: Date.now(),
     totalWeaponsSold: 0,
     totalMaterialsBought: 0,
+    lastBailout: null,
   };
 };
 
@@ -381,6 +382,27 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
+    case 'BAILOUT': {
+      const BAILOUT_COOLDOWN = 24 * 60 * 60 * 1000; // 24時間
+      const BAILOUT_AMOUNT = 50;
+      
+      // クールダウンチェック
+      if (state.lastBailout) {
+        const elapsed = Date.now() - state.lastBailout;
+        if (elapsed < BAILOUT_COOLDOWN) return state;
+      }
+      
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          gold: state.player.gold + BAILOUT_AMOUNT,
+        },
+        lastBailout: Date.now(),
+        lastUpdated: Date.now(),
+      };
+    }
+
     case 'HIRE_ADVENTURER': {
       const cost = getHireCost(state.adventurers.length);
       if (state.player.gold < cost) return state;
@@ -623,6 +645,10 @@ export function useGameState() {
     dispatch({ type: 'HEAL_ADVENTURER', adventurerId });
   }, []);
 
+  const bailout = useCallback(() => {
+    dispatch({ type: 'BAILOUT' });
+  }, []);
+
   const resetGame = useCallback(() => {
     dispatch({ type: 'RESET_GAME' });
   }, []);
@@ -637,6 +663,7 @@ export function useGameState() {
     skipMaterials,
     hireAdventurer,
     healAdventurer,
+    bailout,
     resetGame,
   };
 }

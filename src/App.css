@@ -866,6 +866,45 @@ body {
   font-size: 0.85rem;
 }
 
+.bailout-section {
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.bailout-section h3 {
+  margin-bottom: 0.5rem;
+}
+
+.bailout-description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.bailout-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--gold);
+  border: none;
+  border-radius: 8px;
+  color: var(--bg-dark);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bailout-button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.bailout-button:disabled {
+  background: var(--bg-lighter);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
 .reset-section {
   text-align: center;
 }
